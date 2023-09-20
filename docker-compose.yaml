@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  nodeapp:
+    image: node:latest
+    container_name: nodeapp
+    volumes:
+      - ./node:/usr/src/app
+    tty: true
