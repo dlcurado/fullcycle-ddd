@@ -1,3 +1,7 @@
+import { json } from "sequelize";
+import EventDispatcher from "../../@shared/event/event-dispatcher";
+import CustomerAddressChangedEvent from "../event/customer-address-changed.event";
+import EnviaConsoleLogHandler from "../event/handler/envia-console-log.handler";
 import Address from "../value-object/address";
 
 export default class Customer {
@@ -7,10 +11,19 @@ export default class Customer {
   private _active: boolean = false;
   private _rewardPoints: number = 0;
 
+  private eventDispatcher = new EventDispatcher();
+  private eventHandler = new EnviaConsoleLogHandler();
+
+  get EventHandler(): EnviaConsoleLogHandler {
+    return this.eventHandler;
+  }
+
   constructor(id: string, name: string) {
     this._id = id;
     this._name = name;
     this.validate();
+
+    this.eventDispatcher.register("CustomerAddressChangedEvent", this.eventHandler);
   }
 
   get id(): string {
@@ -45,6 +58,14 @@ export default class Customer {
   
   changeAddress(address: Address) {
     this._address = address;
+    
+    const customerAddressChangedEvent = new CustomerAddressChangedEvent({
+      id: this.id,
+      nome: this.name,
+      endereco: `${address._street}, ${address._number} - ${address._zip} - ${address._city}`
+    });
+
+    this.eventDispatcher.notify(customerAddressChangedEvent);
   }
 
   isActive(): boolean {
